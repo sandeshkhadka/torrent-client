@@ -102,11 +102,17 @@ class Encoder:
             return Encoder._encode_list(payload)
         if(isinstance(payload,dict)):
             return Encoder._encode_dict(payload)
+        if(isinstance(payload,bytes)):
+            return Encoder._encode_bytes(payload)
         return b''
 
     @staticmethod
     def _encode_int(payload: int) -> bytes:
         return str.encode('i' + str(payload) + 'e')
+
+    @staticmethod
+    def _encode_bytes(payload: bytes) -> bytes:
+        return str(len(payload)).encode() + b':' + payload
 
     @staticmethod
     def _encode_string(payload: str) -> bytes:
@@ -116,9 +122,9 @@ class Encoder:
     @staticmethod
     def _encode_dict(payload: dict) -> bytes:
         encoded = b'd'
-        for key, value in payload.items():
+        for key in sorted(payload.keys()):
             encoded += Encoder.encode(key)
-            encoded += Encoder.encode(value)
+            encoded += Encoder.encode(payload[key])
 
         encoded += b'e'
 
