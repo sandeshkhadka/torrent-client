@@ -4,7 +4,7 @@ from .bencode import Decoder, Encoder
 
 
 class Torrent:
-    _meta: dict
+    _meta: dict[bytes, bytes]
     _info_hash: bytes
     _info: dict[bytes,bytes]
 
@@ -14,13 +14,16 @@ class Torrent:
         with open(self._file, 'rb') as file:
             decoded = Decoder(file.read()).decode()
             if not isinstance(decoded, dict):
-                print("Invalid torrent file strucutre")
+                # print("Invalid torrent file strucutre")
                 exit()
             self._meta = decoded
+            # for key in self._meta.keys():
+                # print(key.decode("utf-8"))
         info = self._meta[b'info']
 
         encoded_info = Encoder.encode(info)
         self._info_hash = sha1(encoded_info).digest()
+        # print(f"Info Hash: {self._info_hash.hex()}")
         
         if not isinstance(info, dict):
             print("Info not found")
@@ -30,7 +33,11 @@ class Torrent:
 
     @property
     def announce(self):
-        return self._meta[b'announce']
+        announce = self._meta.get(b'announce',b'')
+        if announce == b'':
+            print("Announce not found")
+            exit()
+        return announce
     
     @property
     def announce_list(self):
@@ -57,11 +64,11 @@ class Torrent:
         return self._meta[b'encoding']
 
     @property 
-    def total_size(self):
+    def total_size(self)-> int:
         if b'length' not in self._info.keys():
             print("Multi file not supported yet")
 
-        return self._info[b'length']
+        return int(self._info[b'length'].decode("utf-8"))
         
     @property
     def created_by(self):
